@@ -69,13 +69,27 @@
 						if ($this.attr('href').charAt(0) != '#')
 							return;
 
-					// Deactivate all links.
-						$nav_a.removeClass('active');
+					// Cancel any pending unlock timers and clear locks left over
+					// from a previous click (handles rapid successive clicks).
+						$nav_a.each(function() {
+							window.clearTimeout($(this).data('_activeLockTimeout'));
+						});
+						$nav_a.removeClass('active active-locked');
 
 					// Activate link *and* lock it (so Scrollex doesn't try to activate other links as we're scrolling to this one's section).
 						$this
 							.addClass('active')
 							.addClass('active-locked');
+
+					// Unlock once the scroll animation has had time to finish (matches
+					// the "speed" used by .scrolly() below, plus a small buffer).
+					// Doing this on a timer -- instead of waiting for Scrollex to
+					// "enter" the target section -- avoids a flicker where a short
+					// in-between section briefly steals the active highlight while
+					// we're still scrolling past it.
+						$this.data('_activeLockTimeout', window.setTimeout(function() {
+							$this.removeClass('active-locked');
+						}, 1100));
 
 				})
 				.each(function() {
@@ -112,15 +126,10 @@
 
 									}
 
-								// Otherwise, if this section's link is the one that's locked, unlock it.
-									else if ($this.hasClass('active-locked'))
-										$this.removeClass('active-locked');
-
 							}
 						});
 
 				});
-
 		// Title Bar.
 			$titleBar = $(
 				'<div id="titleBar">' +
